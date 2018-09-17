@@ -1,0 +1,62 @@
+package com.project.crawler.services;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.crawler.dto.CrawledUrlDetailsDTO;
+import com.project.crawler.dto.CrawledUrlsDTO;
+
+@Service("CrawlerServiceImpl")
+public class CrawlerServiceImpl implements CrawlerService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceImpl.class);
+
+	ObjectMapper mapper= new ObjectMapper();
+
+	@Override
+	public CrawledUrlDetailsDTO getAlllinksUnderSameDomain(String url, int depth, List<String> navigatedUrls) {
+		if (depth < 0) {
+			return null;
+		} else {
+			List<String> updatedNavigatedUrls = Optional.ofNullable(navigatedUrls).orElse(new ArrayList<>());
+			if (updatedNavigatedUrls.contains(url)) {
+				return null;
+			} else {
+				updatedNavigatedUrls.add(url);
+				final CrawledUrlDetailsDTO crawledUrlDetails = new CrawledUrlDetailsDTO(url);
+				crawlForUrls(url).ifPresent(crawledUrl -> {
+						crawledUrl.getNavigations().parallelStream().forEach(navigation -> {
+						if (navigation.absUrl("href").startsWith(url)) {
+							crawledUrlDetails.addNodesItem(getAlllinksUnderSameDomain(navigation.attr("abs:href"),
+									depth - 1, updatedNavigatedUrls));
+						}
+					});
+				});
+				return crawledUrlDetails;
+			}
+		}
+	}
+
+	public Optional<CrawledUrlsDTO> crawlForUrls(final String url) {
+		try {
+			Connection connection=Jsoup.connect(url);
+			connection.followRedirects(false);
+			Document htmlDocument = connection.get();
+			Elements navigations = htmlDocument.select("a[href]");
+			return Optional.of(new CrawledUrlsDTO(url, navigations));
+		} catch (final IOException | IllegalArgumentException e) {
+			LOGGER.error(String.format("Error getting contents of url %s", url), e);
+			return Optional.empty();
+		}
+	}
+}
