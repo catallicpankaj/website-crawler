@@ -5,19 +5,20 @@ import java.util.List;
 
 import com.project.crawler.dto.ErrorMessage;
 
-public class InvalidInputException  extends Exception {
+public class FallbackException extends Exception{
 
-
-	/** The Constant serialVersionUID. */
-	private static final long serialVersionUID = -3212093183689643689L;
-
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3176323285076013687L;
+	
 	/** The error messages. */
 	private final List<ErrorMessage> errorMessages;
 
 	/**
 	 * Instantiates a new invalid input exception.
 	 */
-	public InvalidInputException() {
+	public FallbackException() {
 		this.errorMessages = new ArrayList<>();
 	}
 
@@ -26,7 +27,7 @@ public class InvalidInputException  extends Exception {
 	 *
 	 * @param errorMessages the error messages
 	 */
-	public InvalidInputException(List<ErrorMessage> errorMessages) {
+	public FallbackException(List<ErrorMessage> errorMessages) {
 		this();
 		this.errorMessages.addAll(errorMessages);
 	}
@@ -36,7 +37,7 @@ public class InvalidInputException  extends Exception {
 	 * 
 	 * @param errorMessage the error Messages
 	 */
-	public InvalidInputException(ErrorMessage errorMessage) {
+	public FallbackException(ErrorMessage errorMessage) {
 		this();
 		this.errorMessages.add(errorMessage);
 		
@@ -50,7 +51,7 @@ public class InvalidInputException  extends Exception {
 	 * @param enableSuppression the enable suppression
 	 * @param writableStackTrace the writable stack trace
 	 */
-	public InvalidInputException(List<ErrorMessage> errorMessages, Throwable cause, boolean enableSuppression,
+	public FallbackException(List<ErrorMessage> errorMessages, Throwable cause, boolean enableSuppression,
 			boolean writableStackTrace) {
 		this.errorMessages = new ArrayList<>();
 		this.errorMessages.addAll(errorMessages);
@@ -63,7 +64,7 @@ public class InvalidInputException  extends Exception {
 	 * @param enableSuppression the enable suppression
 	 * @param writableStackTrace the writable stack trace
 	 */
-	public InvalidInputException(Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public FallbackException(Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		this.errorMessages = new ArrayList<>();
 	}
 
@@ -73,7 +74,7 @@ public class InvalidInputException  extends Exception {
 	 * @param errorMessages the error messages
 	 * @param cause the cause
 	 */
-	public InvalidInputException(List<ErrorMessage> errorMessages, Throwable cause) {
+	public FallbackException(List<ErrorMessage> errorMessages, Throwable cause) {
 		this.errorMessages = new ArrayList<>();
 		this.errorMessages.addAll(errorMessages);
 	}
@@ -83,7 +84,7 @@ public class InvalidInputException  extends Exception {
 	 *
 	 * @param cause the cause
 	 */
-	public InvalidInputException(Throwable cause) {
+	public FallbackException(Throwable cause) {
 		this.errorMessages = new ArrayList<>();
 	}
 
@@ -104,4 +105,6 @@ public class InvalidInputException  extends Exception {
 	public void setErrorMessages(List<ErrorMessage> errorMessages) {
 		this.errorMessages.addAll(errorMessages);
 	}
+
+
 }

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class CrawledUrlDetailsDTO implements Serializable {
 
 	/**
@@ -14,6 +16,16 @@ public class CrawledUrlDetailsDTO implements Serializable {
 
 	private String url;
 	private List<CrawledUrlDetailsDTO> nodes;
+	@JsonIgnore
+	private ServiceStatus apiStatus;
+
+	public ServiceStatus getApiStatus() {
+		return apiStatus;
+	}
+
+	public void setApiStatus(ServiceStatus apiStatus) {
+		this.apiStatus = apiStatus;
+	}
 
 	public String getUrl() {
 		return url;

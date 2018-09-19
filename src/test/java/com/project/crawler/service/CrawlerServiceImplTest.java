@@ -19,7 +19,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.io.Resources;
 import com.project.crawler.dto.CrawledUrlDetailsDTO;
-import com.project.crawler.dto.CrawledUrlsDTO;
 import com.project.crawler.services.CrawlerServiceImpl;
 
 @RunWith(PowerMockRunner.class)

@@ -20,6 +20,7 @@ import com.project.crawler.controller.CrawlerController;
 import com.project.crawler.dto.CrawlerServiceDTO;
 import com.project.crawler.dto.ErrorMessage;
 import com.project.crawler.dto.ServiceStatus;
+import com.project.crawler.exception.FallbackException;
 import com.project.crawler.exception.InvalidInputException;
 
 import brave.Span;
@@ -69,7 +70,17 @@ public class RestResponseExceptionHandler {
 			LOGGER.error(msg, ex);
 			addErrorInDTO(crawlerServiceDTO, errorMessages);
 			return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.BAD_REQUEST);
-		}else {
+		} else if(isAssignableTo(ex, FallbackException.class)) {
+			FallbackException fallbackException = (FallbackException) getExceptionType(ex,
+					FallbackException.class);
+			List<ErrorMessage> errorMessages = fallbackException.getErrorMessages();
+			String msg = MessageFormat.format("{0} - Service fallback enabled. Error messages are: {1}",
+					CrawlerConstants.EC_HYSTRIX_FALLBACK, errorMessages);
+			LOGGER.error(msg,ex);
+			addErrorInDTO(crawlerServiceDTO, errorMessages);
+			return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		else {
 				String msg = MessageFormat.format("{0} - Data / Entity not found.",
 						CrawlerConstants.EC_GENERIC_INTERNAL_SERVER_ERROR);
 				LOGGER.error(msg, ex);

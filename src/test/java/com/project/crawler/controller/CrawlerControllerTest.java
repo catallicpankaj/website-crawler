@@ -3,13 +3,8 @@ package com.project.crawler.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.time.Duration;
-import java.util.Optional;
 
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -29,9 +25,7 @@ import org.springframework.test.web.reactive.server.WebTestClient.BodySpec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.io.Resources;
 import com.project.crawler.dto.CrawledUrlDetailsDTO;
-import com.project.crawler.dto.CrawledUrlsDTO;
 import com.project.crawler.services.CrawlerService;
 
 import brave.Tracer;
@@ -52,6 +46,9 @@ public class CrawlerControllerTest {
 	private WebTestClient webTestClient;
 	
 	private CrawledUrlDetailsDTO crawledUrlDetailsDTO;
+	
+	@Value("${crawler.default.depth}")
+	private int defaultDepth;
 
 
 	private ObjectMapper mapper;
@@ -75,8 +72,8 @@ public class CrawlerControllerTest {
 
 	@Test
 	public void testMandatoryParam() throws Exception {
-		this.webTestClient.get().uri("/apis/crawl/links").accept(MediaType.APPLICATION_JSON).exchange().expectStatus()
-				.isEqualTo(HttpStatus.BAD_REQUEST);
+		this.webTestClient.get().uri("/apis/v1.0/crawl/links").accept(MediaType.APPLICATION_JSON).exchange().expectStatus()
+				.isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@Test
@@ -85,7 +82,7 @@ public class CrawlerControllerTest {
 		//Mockito.when(crawlerService.crawlForUrls(Mockito.anyString())).thenReturn(Optional.of(crawledDetails));
 		Mockito.when(crawlerService.getAlllinksUnderSameDomain(Mockito.anyString(), Mockito.anyInt(), Mockito.isNull()))
 				.thenReturn(crawledUrlDetailsDTO);
-		BodySpec<String, ?> bodySpec = this.webTestClient.get().uri("/apis/crawl/links?url=http://www.test.in&depth=5")
+		BodySpec<String, ?> bodySpec = this.webTestClient.get().uri("/apis/v1.0/crawl/links?url=http://www.test.in&depth=5")
 				.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk().expectBody(String.class);
 		assertNotNull(bodySpec.returnResult().getResponseBody());
 		assertThat(mapper.writeValueAsString(bodySpec.returnResult().getResponseBody())).isNotEmpty()

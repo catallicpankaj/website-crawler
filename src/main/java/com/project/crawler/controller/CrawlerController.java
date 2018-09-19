@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import com.project.crawler.dto.CrawledUrlDetailsDTO;
 import com.project.crawler.dto.CrawlerServiceDTO;
 import com.project.crawler.dto.ErrorMessage;
 import com.project.crawler.dto.ServiceStatus;
+import com.project.crawler.exception.FallbackException;
 import com.project.crawler.exception.InvalidInputException;
 import com.project.crawler.services.CrawlerService;
 
@@ -56,32 +58,46 @@ public class CrawlerController {
 	@GetMapping(value = "/links", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<CrawlerServiceDTO<CrawledUrlDetailsDTO>> getAllLinks(HttpServletRequest request,
 			@RequestParam(name = "url", required = true) String url,
-			@RequestParam(value = "depth", required = false) String depth) throws InvalidInputException {
-
+			@RequestParam(value = "depth", required = false) String depth) throws InvalidInputException, FallbackException {
 		LOGGER.info("Start method: getAllLinks");
 		Instant requestReceivedTime = Instant.now();
-		 request.setAttribute(REQUEST_RECEIVED_TIME,requestReceivedTime);
-		 //To avoid Sonar exception, assigning the value to the new variable.
-		 int passedDepth=0;
-		 if(depth==null) {
-			 passedDepth=defaultDepth;
-		 }else {
-			 validateInputData(depth,url);
-			 passedDepth=Integer.parseInt(depth);
-		 }
-		
+		request.setAttribute(REQUEST_RECEIVED_TIME, requestReceivedTime);
+		// To avoid Sonar exception, assigning the value to the new variable.
+		int passedDepth = 0;
+		if (depth == null) {
+			passedDepth = defaultDepth;
+		} else {
+			validateInputData(depth, url);
+			passedDepth = Integer.parseInt(depth);
+		}
 		CrawledUrlDetailsDTO crawlerResponse = crawlerService.getAlllinksUnderSameDomain(url, passedDepth, null);
-		CrawlerServiceDTO<CrawledUrlDetailsDTO> crawlerServiceDTO = new CrawlerServiceDTO<>();
-		crawlerServiceDTO.setData(crawlerResponse);
-		crawlerServiceDTO.setResponseSentTime(Instant.now());
-		crawlerServiceDTO.setRequestReceivedTime(requestReceivedTime);
-		crawlerServiceDTO.setServiceStatus(ServiceStatus.SUCCESS);
-		crawlerServiceDTO.setPageSize(1);
-		crawlerServiceDTO.setPageFrom(1);
-		crawlerServiceDTO.setPageTo(1);
-		crawlerServiceDTO.addTraceInfo(this.tracer);
+		CrawlerServiceDTO<CrawledUrlDetailsDTO> crawlerServiceDTO = setServiceResponse(requestReceivedTime,
+				crawlerResponse);
 		LOGGER.info("End method: getAllLinks");
 		return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.OK);
+	}
+
+	private CrawlerServiceDTO<CrawledUrlDetailsDTO> setServiceResponse(Instant requestReceivedTime,
+			CrawledUrlDetailsDTO crawlerResponse) throws FallbackException {
+		if (crawlerResponse.getApiStatus() != null && crawlerResponse.getApiStatus().equals(ServiceStatus.ERROR)) {
+			List<ErrorMessage> errorMessages = new ArrayList<>();
+			ErrorMessage errorMessage = new ErrorMessage(CrawlerConstants.EC_HYSTRIX_FALLBACK,
+					"Service Currently unavailable, please retry in sometime.");
+			errorMessages.add(errorMessage);
+			throw new FallbackException(errorMessage);
+		} else {
+			CrawlerServiceDTO<CrawledUrlDetailsDTO> crawlerServiceDTO = new CrawlerServiceDTO<>();
+			crawlerServiceDTO.setData(crawlerResponse);
+			crawlerServiceDTO.setResponseSentTime(Instant.now());
+			crawlerServiceDTO.setRequestReceivedTime(requestReceivedTime);
+			crawlerServiceDTO.setServiceStatus(ServiceStatus.SUCCESS);
+			crawlerServiceDTO.setPageSize(1);
+			crawlerServiceDTO.setPageFrom(1);
+			crawlerServiceDTO.setPageTo(1);
+			crawlerServiceDTO.addTraceInfo(this.tracer);
+			return crawlerServiceDTO;
+		}
+
 	}
 	
 	private void validateInputData(String depth,String url) throws InvalidInputException {
@@ -99,7 +115,9 @@ public class CrawlerController {
 			ErrorMessage errorMessage = new ErrorMessage(CrawlerConstants.EC_INVALID_INPUT, message);
 			errorMessages.add(errorMessage);
 		}
-		throw new InvalidInputException(errorMessages);
+		if(CollectionUtils.isNotEmpty(errorMessages)) {
+			throw new InvalidInputException(errorMessages);
+		}
 	}
-
+	
 }
