@@ -6,13 +6,13 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-//@Configuration
-//@EnableCaching
-public class CachingConfiguration {/*
+@Configuration
+@EnableCaching
+public class CachingConfiguration {
 
 	@Bean
 	public CacheManager cacheManager() {
-		return new ConcurrentMapCacheManager("crawledlinks");
+		return new ConcurrentMapCacheManager("crawlurlcache");
 	}
 
-*/}
+}

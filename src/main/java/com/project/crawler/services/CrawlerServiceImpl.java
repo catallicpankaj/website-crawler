@@ -11,18 +11,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import com.netflix.hystrix.contrib.javanica.conf.HystrixPropertiesManager;
-import com.project.crawler.constants.CrawlerConstants;
 import com.project.crawler.dto.CrawledUrlDetailsDTO;
 import com.project.crawler.dto.CrawledUrlsDTO;
-import com.project.crawler.dto.ErrorMessage;
 import com.project.crawler.dto.ServiceStatus;
-import com.project.crawler.exception.FallbackException;
 
 @Service("CrawlerServiceImpl")
 public class CrawlerServiceImpl implements CrawlerService {
@@ -31,15 +29,17 @@ public class CrawlerServiceImpl implements CrawlerService {
 	ObjectMapper mapper= new ObjectMapper();
 
 	@Override
+	@Cacheable("crawlurlcache")
 	@HystrixCommand(
 			commandKey="CrawlerApiCommandKey",
 			fallbackMethod = "handleFailureResponse_fallback", 
 			commandProperties = {
-					@HystrixProperty(name = HystrixPropertiesManager.EXECUTION_ISOLATION_THREAD_TIMEOUT_IN_MILLISECONDS, value = "3000"),
+					@HystrixProperty(name = HystrixPropertiesManager.EXECUTION_ISOLATION_THREAD_TIMEOUT_IN_MILLISECONDS, value = "10000"),
 					@HystrixProperty(name = HystrixPropertiesManager.CIRCUIT_BREAKER_REQUEST_VOLUME_THRESHOLD, value = "4")
 					}
 			)
 	public CrawledUrlDetailsDTO getAlllinksUnderSameDomain(String url, int depth, List<String> navigatedUrls) {
+		LOGGER.debug("fetching navigations");
 		if (depth < 0) {
 			return null;
 		} else {
