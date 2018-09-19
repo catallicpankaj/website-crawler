@@ -55,6 +55,18 @@ public class CrawlerController {
 	@Value("${crawler.default.depth}")
 	private int defaultDepth;
 
+	/**
+	 * Crawl for all the links with the provided depth. Default depth is 1.
+	 * 
+	 * @param request -ServletRequest this helps to maintain the requestReceivedTime
+	 *                in the response, in case any exception occurs during the
+	 *                request processing.
+	 * @param url     - manadatory param- URL to be crawled.
+	 * @param depth   - optional param- depth to which crawling need to be done.
+	 * @return CrawlerServiceDTO- This is the base model for the api response.
+	 * @throws InvalidInputException - Handle invalid inputs.
+	 * @throws FallbackException - Handle Hystrix Fallback.
+	 */
 	@GetMapping(value = "/links", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<CrawlerServiceDTO<CrawledUrlDetailsDTO>> getAllLinks(HttpServletRequest request,
 			@RequestParam(name = "url", required = true) String url,
