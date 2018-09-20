@@ -10,5 +10,4 @@ public interface CrawlerService {
 
 	public CrawledUrlDetailsDTO getAlllinksUnderSameDomain(String url,int depth,List<String> urls);
 
-
 }

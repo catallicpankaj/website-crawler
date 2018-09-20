@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.crawler.constants.CrawlerConstants;
+import com.project.crawler.data.CrawlUrlRepository;
 import com.project.crawler.dto.CrawledUrlDetailsDTO;
 import com.project.crawler.dto.CrawlerServiceDTO;
 import com.project.crawler.dto.ErrorMessage;
@@ -49,6 +50,10 @@ public class CrawlerController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerController.class);
 
 	@Autowired
+	@Qualifier("CrawlUrlRepositoryImpl")
+	CrawlUrlRepository crawlUrlRepo;
+	
+	@Autowired
 	@Qualifier("CrawlerServiceImpl")
 	private CrawlerService crawlerService;
 	
@@ -67,10 +72,11 @@ public class CrawlerController {
 	 * @throws InvalidInputException - Handle invalid inputs.
 	 * @throws FallbackException - Handle Hystrix Fallback.
 	 */
-	@GetMapping(value = "/links", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "/v1.0/crawl/links", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<CrawlerServiceDTO<CrawledUrlDetailsDTO>> getAllLinks(HttpServletRequest request,
 			@RequestParam(name = "url", required = true) String url,
-			@RequestParam(value = "depth", required = false) String depth) throws InvalidInputException, FallbackException {
+			@RequestParam(value = "depth", required = false) String depth)
+			throws InvalidInputException, FallbackException {
 		LOGGER.info("Start method: getAllLinks");
 		Instant requestReceivedTime = Instant.now();
 		request.setAttribute(REQUEST_RECEIVED_TIME, requestReceivedTime);
@@ -89,6 +95,53 @@ public class CrawlerController {
 		return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.OK);
 	}
 
+	
+	/**
+	 * Crawl for all the links with the provided depth. Default depth is 1.
+	 * There is standalone redis configuration linked to this api. 
+	 * Redis server with default configuration can be made up and It will link the data via CrawlUrlRepository bean.
+	 * 
+	 * @param request -ServletRequest this helps to maintain the requestReceivedTime
+	 *                in the response, in case any exception occurs during the
+	 *                request processing.
+	 * @param url     - manadatory param- URL to be crawled.
+	 * @param depth   - optional param- depth to which crawling need to be done.
+	 * @return CrawlerServiceDTO- This is the base model for the api response.
+	 * @throws InvalidInputException - Handle invalid inputs.
+	 * @throws FallbackException - Handle Hystrix Fallback.
+	 */
+	@GetMapping(value = "/v2.0/crawl/links/", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<CrawlerServiceDTO<CrawledUrlDetailsDTO>> getAllLinksWithRedisIntegration(HttpServletRequest request,
+			@RequestParam(name = "url", required = true) String url,
+			@RequestParam(value = "depth", required = false) String depth)
+			throws InvalidInputException, FallbackException {
+		LOGGER.info("Start method: getAllLinks");
+		Instant requestReceivedTime = Instant.now();
+		request.setAttribute(REQUEST_RECEIVED_TIME, requestReceivedTime);
+		// To avoid Sonar exception, assigning the value to the new variable.
+		int passedDepth = 0;
+		if (depth == null) {
+			passedDepth = defaultDepth;
+		} else {
+			validateInputData(depth, url);
+			passedDepth = Integer.parseInt(depth);
+		}
+		String hashKeyString = url + Integer.toString(passedDepth);
+		CrawledUrlDetailsDTO crawlerResponse = new CrawledUrlDetailsDTO(url);
+		int redisHashKey=hashKeyString.hashCode();
+		LOGGER.info("-------------------Trying to get the response from Redis-------------------");
+		crawlerResponse = crawlUrlRepo.findDataByUrlAndDepth(redisHashKey);
+		if (crawlerResponse == null) {
+			LOGGER.info("-------------------Data not found in Redis-------------------");
+			crawlerResponse = crawlerService.getAlllinksUnderSameDomain(url, passedDepth, null);
+			LOGGER.info("-------------------Saving the response to Redis-------------------");
+			crawlUrlRepo.saveDataByUrlAndDepth(redisHashKey, crawlerResponse);
+		}
+		CrawlerServiceDTO<CrawledUrlDetailsDTO> crawlerServiceDTO = setServiceResponse(requestReceivedTime,
+				crawlerResponse);
+		LOGGER.info("End method: getAllLinks");
+		return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.OK);
+	}
 	private CrawlerServiceDTO<CrawledUrlDetailsDTO> setServiceResponse(Instant requestReceivedTime,
 			CrawledUrlDetailsDTO crawlerResponse) throws FallbackException {
 		if (crawlerResponse.getApiStatus() != null && crawlerResponse.getApiStatus().equals(ServiceStatus.ERROR)) {
@@ -111,6 +164,8 @@ public class CrawlerController {
 		}
 
 	}
+	
+	
 	
 	private void validateInputData(String depth,String url) throws InvalidInputException {
 		List<ErrorMessage> errorMessages = new ArrayList<>();

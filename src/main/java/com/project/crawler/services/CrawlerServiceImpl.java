@@ -27,6 +27,8 @@ public class CrawlerServiceImpl implements CrawlerService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceImpl.class);
 
 	ObjectMapper mapper= new ObjectMapper();
+	
+
 
 	@Override
 	@Cacheable("crawlurlcache")
@@ -40,26 +42,29 @@ public class CrawlerServiceImpl implements CrawlerService {
 			)
 	public CrawledUrlDetailsDTO getAlllinksUnderSameDomain(String url, int depth, List<String> navigatedUrls) {
 		LOGGER.debug("fetching navigations");
-		if (depth < 0) {
-			return null;
-		} else {
-			List<String> updatedNavigatedUrls = Optional.ofNullable(navigatedUrls).orElse(new ArrayList<>());
-			if (updatedNavigatedUrls.contains(url)) {
+			if (depth < 0) {
 				return null;
 			} else {
-				updatedNavigatedUrls.add(url);
-				final CrawledUrlDetailsDTO crawledUrlDetails = new CrawledUrlDetailsDTO(url);
-				crawlForUrls(url).ifPresent(crawledUrl -> {
-						crawledUrl.getNavigations().parallelStream().forEach(navigation -> {
-						if (navigation.absUrl("href").startsWith(url)) {
-							crawledUrlDetails.addNodesItem(getAlllinksUnderSameDomain(navigation.attr("abs:href"),
-									depth - 1, updatedNavigatedUrls));
-						}
+				List<String> updatedNavigatedUrls = Optional.ofNullable(navigatedUrls).orElse(new ArrayList<>());
+				if (updatedNavigatedUrls.contains(url)) {
+					return null;
+				} else {
+					updatedNavigatedUrls.add(url);
+					final CrawledUrlDetailsDTO crawledUrlDetails = new CrawledUrlDetailsDTO(url);
+					crawlForUrls(url).ifPresent(crawledUrl -> {
+							crawledUrl.getNavigations().parallelStream().forEach(navigation -> {
+							if (navigation.absUrl("href").startsWith(url)) {
+								crawledUrlDetails.addNodesItem(getAlllinksUnderSameDomain(navigation.attr("abs:href"),
+										depth - 1, updatedNavigatedUrls));
+							}
+						});
 					});
-				});
-				return crawledUrlDetails;
+					
+					return crawledUrlDetails;
+				}
 			}
-		}
+		
+		
 	}
 
 	public Optional<CrawledUrlsDTO> crawlForUrls(final String url) {

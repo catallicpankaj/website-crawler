@@ -5,8 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.data.redis.core.RedisHash;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@RedisHash("CrawledUrlDetails")
 public class CrawledUrlDetailsDTO implements Serializable {
 
 	/**
@@ -15,9 +18,19 @@ public class CrawledUrlDetailsDTO implements Serializable {
 	private static final long serialVersionUID = -1821725853524866377L;
 
 	private String url;
+	@JsonIgnore
+	private int depth;
 	private List<CrawledUrlDetailsDTO> nodes;
 	@JsonIgnore
 	private ServiceStatus apiStatus;
+
+	public int getDepth() {
+		return depth;
+	}
+
+	public void setDepth(int depth) {
+		this.depth = depth;
+	}
 
 	public ServiceStatus getApiStatus() {
 		return apiStatus;
