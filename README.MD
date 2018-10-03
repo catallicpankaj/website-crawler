@@ -6,7 +6,7 @@ There is a use of Jsoup library so as to hit the URL and parse the HTML docs wit
 
 The output of the crawler service is wrapped under the standard response of the service. And the traceId is added for the response so that any request can be well tracked via loggers, or if required can be made available for Zipkin Integration.
 
-<b>URL to access</b> : http://localhost:2050/apis/v1.0/crawl/links?url=https://www.facebook.com/&depth=100 
+<b>URL to access</b> : http://localhost:2050/apis/v1.0/crawl/links?url=https://www.google.co.in/&depth=2 
 		
 		depth is optional param
 Exposed on Http Verb : GET 
@@ -25,7 +25,7 @@ EnableCaching Strategy - For any URL's which are held in common for the requests
 
 <h2> Versioning provided for Redis Cache Integration </h2>
 Added Support for Redis standalone server (pre-requisite: redis server should be up and running on host 127.0.0.1 and port 6379. These details are configurable in application.properties. Upgraded the version to v2.0 for API using redis cache.<br>
-<b>URL to access</b> : http://localhost:2050/apis/v2.0/crawl/links?url=https://www.facebook.com/&depth=100 
+<b>URL to access</b> : http://localhost:2050/apis/v2.0/crawl/links?url=https://www.google.co.in/&depth=2 
 		
 		depth is optional param
 Exposed on Http Verb : GET 
