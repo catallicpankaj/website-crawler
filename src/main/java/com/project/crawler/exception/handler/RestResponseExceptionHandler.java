@@ -31,13 +31,11 @@ import brave.Tracer;
 public class RestResponseExceptionHandler {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestResponseExceptionHandler.class);
-	/** The Constant REQUEST_RECEIVED_TIME. */
+
 	public static final String REQUEST_RECEIVED_TIME = "requestReceivedTime";
 
-	/** The tracer. */
 	@Autowired
 	private Tracer tracer;
-	
 	
 	@SuppressWarnings("all")
 	@ExceptionHandler(Throwable.class)
@@ -81,7 +79,7 @@ public class RestResponseExceptionHandler {
 			return new ResponseEntity<>(crawlerServiceDTO, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		else {
-				String msg = MessageFormat.format("{0} - Data / Entity not found.",
+				String msg = MessageFormat.format("{0} - Data/Entity not found.",
 						CrawlerConstants.EC_GENERIC_INTERNAL_SERVER_ERROR);
 				LOGGER.error(msg, ex);
 				addErrorInDTO(crawlerServiceDTO, CrawlerConstants.EC_GENERIC_INTERNAL_SERVER_ERROR,
@@ -113,7 +111,7 @@ public class RestResponseExceptionHandler {
 			if (i == 1) {
 				sb.append(cause.getMessage());
 			} else {
-				sb.append(" CAUSED BY: [ ").append(cause.getMessage()).append(" ]");
+				sb.append(" Issue Occured due to: [ ").append(cause.getMessage()).append(" ]");
 			}
 			i++;
 			oldCause = cause;

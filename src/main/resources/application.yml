@@ -1,0 +1,17 @@
+server:
+  servlet:
+    context-path: /apis
+    
+spring:
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+  application:
+    name: crawler-v1.0
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    
+crawler:
+  default:
+    depth: 1

@@ -5,8 +5,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.project.crawler</groupId>
-	<artifactId>crawler-v1.0</artifactId>
-	<!-- <version>4.2.1</version> -->
+	<artifactId>crawler-app</artifactId>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<name>crawler</name>
 	<description>Crawl on the links</description>
