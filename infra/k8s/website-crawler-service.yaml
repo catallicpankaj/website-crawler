@@ -42,14 +42,14 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /health
+            path: /apis/health
             port: 8080
           initialDelaySeconds: 90
           periodSeconds: 15
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /health
+            path: /apis/health
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 15
